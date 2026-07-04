@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>محفظتي - إدارة المال</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #0f172a; --card: #1e293b; --card2: #334155;
+            --primary: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --info: #3b82f6; --purple: #8b5cf6; --pink: #ec4899;
+            --text: #f1f5f9; --text2: #94a3b8; --border: #334155;
+        }
+
+        body {
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            padding-bottom: 80px; overflow-x: hidden;
+        }
+        .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+
+        .header { text-align: center; padding: 20px 0 10px; }
+        .header h1 { font-size: 1.6rem; color: var(--primary); margin-bottom: 4px; font-weight: 800; }
+        .header p { color: var(--text2); font-size: 0.9rem; font-weight: 400; }
+
+        .balance-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            border-radius: 20px; padding: 24px; margin: 16px 0;
+            box-shadow: 0 10px 40px rgba(16,185,129,0.3);
+            position: relative; overflow: hidden;
+        }
+        .balance-card::before {
+            content: ''; position: absolute; top: -50%; right: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        .balance-label { font-size: 0.9rem; opacity: 0.9; position: relative; font-weight: 500; }
+        .balance-amount { font-size: 2.8rem; font-weight: 900; margin: 8px 0; position: relative; letter-spacing: -1px; }
+        .balance-currency { font-size: 1.1rem; opacity: 0.8; font-weight: 600; }
+        .balance-actions { display: flex; gap: 10px; margin-top: 16px; position: relative; }
+        .btn-small {
+            flex: 1; padding: 10px; border: none; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            background: rgba(255,255,255,0.2); color: white;
+            backdrop-filter: blur(10px); transition: all 0.2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .btn-small:active { transform: scale(0.95); }
+
+        .budget-section { background: var(--card); border-radius: 16px; padding: 16px; margin: 12px 0; }
+        .section-title { font-size: 0.95rem; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .budget-row { display: flex; gap: 10px; align-items: center; }
+        .budget-row input {
+            flex: 1; background: var(--card2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 16px; color: var(--text);
+            font-size: 1rem; outline: none; font-family: 'Tajawal', sans-serif; font-weight: 500;
+        }
+        .btn-primary {
+            background: var(--primary); color: white; border: none;
+            padding: 12px 20px; border-radius: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .btn-primary:active { transform: scale(0.95); }
+        .budget-info { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.85rem; color: var(--text2); }
+        .budget-info span { color: var(--primary); font-weight: 700; }
+
+        .quick-add { background: var(--card); border-radius: 16px; padding: 16px; margin: 12px 0; }
+        .amount-input {
+            width: 100%; background: var(--card2); border: 2px solid var(--border);
+            border-radius: 16px; padding: 16px; color: var(--text);
+            font-size: 2rem; text-align: center; font-weight: 900;
+            margin-bottom: 12px; outline: none; transition: border-color 0.2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .amount-input:focus { border-color: var(--primary); }
+
+        .categories-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px;
+        }
+        .cat-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            padding: 12px 4px; border-radius: 14px; border: 2px solid var(--border);
+            background: var(--card2); cursor: pointer; transition: all 0.2s;
+        }
+        .cat-btn .cat-icon { font-size: 1.6rem; }
+        .cat-btn .cat-name { font-size: 0.75rem; color: var(--text2); font-weight: 600; }
+        .cat-btn.selected {
+            border-color: var(--primary); background: rgba(16,185,129,0.15);
+        }
+        .cat-btn.selected .cat-name { color: var(--primary); font-weight: 800; }
+        .cat-btn:active { transform: scale(0.92); }
+
+        .btn-add {
+            width: 100%; background: var(--danger); color: white; border: none;
+            padding: 16px; border-radius: 16px; font-size: 1.1rem; font-weight: 800;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+            justify-content: center; gap: 8px; font-family: 'Tajawal', sans-serif;
+        }
+        .btn-add:active { transform: scale(0.97); }
+
+        .stats-section { background: var(--card); border-radius: 16px; padding: 16px; margin: 12px 0; }
+        .chart-container { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
+        .donut-chart {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: conic-gradient(var(--primary) 0% 100%);
+            position: relative; flex-shrink: 0;
+        }
+        .donut-chart::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: var(--card); border-radius: 50%;
+        }
+        .chart-legend { flex: 1; }
+        .legend-item {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+            font-size: 0.85rem; font-weight: 500;
+        }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-info { flex: 1; display: flex; justify-content: space-between; }
+
+        .transactions { background: var(--card); border-radius: 16px; padding: 16px; margin: 12px 0; }
+        .tx-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .tx-item:last-child { border-bottom: none; }
+        .tx-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+        .tx-details { flex: 1; }
+        .tx-title { font-size: 0.95rem; font-weight: 700; }
+        .tx-date { font-size: 0.8rem; color: var(--text2); margin-top: 2px; font-weight: 400; }
+        .tx-amount { font-size: 1rem; font-weight: 800; color: var(--danger); }
+        .tx-amount.income { color: var(--primary); }
+        .delete-btn {
+            background: none; border: none; color: var(--text2);
+            font-size: 1.2rem; cursor: pointer; padding: 4px;
+        }
+        .delete-btn:active { color: var(--danger); }
+
+        .empty-state { text-align: center; padding: 30px; color: var(--text2); }
+        .empty-state .emoji { font-size: 3rem; margin-bottom: 10px; }
+        .empty-state div { font-weight: 500; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; padding: 8px 0;
+            backdrop-filter: blur(20px); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 6px 16px; border-radius: 12px; cursor: pointer;
+            color: var(--text2); font-size: 0.75rem; transition: all 0.2s;
+            border: none; background: none; font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item .nav-icon { font-size: 1.5rem; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none;
+            align-items: center; justify-content: center; z-index: 200;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card); border-radius: 20px; padding: 24px;
+            width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto;
+        }
+        .modal-title { font-size: 1.15rem; margin-bottom: 16px; font-weight: 800; }
+        .modal-row { margin-bottom: 12px; }
+        .modal-row label { display: block; font-size: 0.85rem; color: var(--text2); margin-bottom: 6px; font-weight: 600; }
+        .modal-row input, .modal-row select {
+            width: 100%; background: var(--card2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px; color: var(--text); font-size: 1rem; outline: none;
+            font-family: 'Tajawal', sans-serif; font-weight: 500;
+        }
+        .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .modal-actions button { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; }
+        .btn-cancel { background: var(--card2); color: var(--text); }
+        .btn-confirm { background: var(--primary); color: white; }
+
+        .settings-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 0; border-bottom: 1px solid var(--border);
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-label { font-size: 0.95rem; font-weight: 600; }
+        .settings-desc { font-size: 0.8rem; color: var(--text2); margin-top: 2px; font-weight: 400; }
+        .toggle {
+            width: 50px; height: 28px; background: var(--card2); border-radius: 14px;
+            position: relative; cursor: pointer; transition: background 0.2s;
+        }
+        .toggle.active { background: var(--primary); }
+        .toggle::after {
+            content: ''; position: absolute; top: 3px; right: 3px;
+            width: 22px; height: 22px; background: white; border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .toggle.active::after { transform: translateX(-22px); }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: slideUp 0.3s ease; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--primary); color: white; padding: 14px 28px; border-radius: 14px;
+            font-weight: 700; z-index: 300; transition: transform 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 0.95rem; font-family: 'Tajawal', sans-serif;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .alert-banner {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+            border-radius: 12px; padding: 14px 16px; margin: 12px 0;
+            display: none; align-items: center; gap: 10px;
+            animation: slideUp 0.4s ease;
+        }
+        .alert-banner.show { display: flex; }
+        .alert-banner .alert-icon { font-size: 1.5rem; }
+        .alert-banner .alert-text { flex: 1; font-size: 0.9rem; font-weight: 700; }
+        .alert-banner .alert-close {
+            background: none; border: none; color: white; font-size: 1.2rem;
+            cursor: pointer; opacity: 0.7;
+        }
+
+        .notif-item {
+            background: var(--card2); border-radius: 12px; padding: 14px;
+            margin-bottom: 10px; border: 1px solid var(--border);
+        }
+        .notif-item-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+        }
+        .notif-item-title { font-size: 0.95rem; font-weight: 700; }
+        .notif-item-desc { font-size: 0.8rem; color: var(--text2); font-weight: 400; }
+        .notif-input-row {
+            display: flex; gap: 8px; margin-top: 10px;
+        }
+        .notif-input-row input, .notif-input-row select {
+            flex: 1; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px; color: var(--text); font-size: 0.9rem; outline: none;
+            font-family: 'Tajawal', sans-serif; font-weight: 500;
+        }
+
+        .btn-notif {
+            background: var(--info); color: white; border: none;
+            padding: 10px 16px; border-radius: 10px; font-weight: 700;
+            cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .btn-notif:active { transform: scale(0.95); }
+
+        .badge {
+            display: inline-block; background: var(--danger); color: white;
+            font-size: 0.7rem; padding: 2px 6px; border-radius: 10px;
+            margin-right: 6px; font-weight: 800;
+        }
+
+        /* ===== LIGHT MODE ===== */
+        body.light-mode {
+            --bg: #f8fafc; --card: #ffffff; --card2: #f1f5f9;
+            --primary: #059669; --danger: #dc2626; --warning: #d97706;
+            --info: #2563eb; --purple: #7c3aed; --pink: #db2777;
+            --text: #0f172a; --text2: #64748b; --border: #e2e8f0;
+        }
+        body.light-mode .balance-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            box-shadow: 0 10px 40px rgba(16,185,129,0.25);
+        }
+        body.light-mode .amount-input {
+            background: #f8fafc; border-color: #e2e8f0; color: #0f172a;
+        }
+        body.light-mode .amount-input:focus { border-color: var(--primary); }
+        body.light-mode .budget-row input {
+            background: #f8fafc; border-color: #e2e8f0; color: #0f172a;
+        }
+        body.light-mode .cat-btn {
+            background: #f8fafc; border-color: #e2e8f0;
+        }
+        body.light-mode .notif-item {
+            background: #f8fafc; border-color: #e2e8f0;
+        }
+        body.light-mode .notif-input-row input,
+        body.light-mode .notif-input-row select {
+            background: #ffffff; border-color: #e2e8f0; color: #0f172a;
+        }
+        body.light-mode .modal-row input,
+        body.light-mode .modal-row select {
+            background: #f8fafc; border-color: #e2e8f0; color: #0f172a;
+        }
+        body.light-mode .saved-notif-item {
+            background: #f8fafc;
+        }
+        body.light-mode .toggle {
+            background: #e2e8f0;
+        }
+        body.light-mode .donut-chart::after {
+            background: #ffffff;
+        }
+        body.light-mode .bottom-nav {
+            background: #ffffff;
+            border-top-color: #e2e8f0;
+        }
+        body.light-mode .modal {
+            background: #ffffff;
+        }
+        body.light-mode .btn-cancel {
+            background: #f1f5f9; color: #0f172a;
+        }
+        body.light-mode .alert-banner {
+            box-shadow: 0 4px 15px rgba(220,38,38,0.2);
+        }
+        body.light-mode .empty-state {
+            color: #64748b;
+        }
+
+        .theme-toggle-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .theme-icon { font-size: 1.3rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Section -->
+        <div id="home-section" class="section active">
+            <div class="header">
+                <h1>💰 محفظتي</h1>
+                <p>إدارة مالك بذكاء</p>
+            </div>
+
+            <div class="alert-banner" id="alert-banner">
+                <span class="alert-icon">⚠️</span>
+                <span class="alert-text" id="alert-text">تنبيه!</span>
+                <button class="alert-close" onclick="dismissAlert()">✕</button>
+            </div>
+
+            <div class="balance-card animate-in">
+                <div class="balance-label">الرصيد المتاح</div>
+                <div class="balance-amount"><span id="balance">0</span> <span class="balance-currency">د.إ</span></div>
+                <div class="balance-actions">
+                    <button class="btn-small" onclick="openModal('income')">➕ إضافة دخل</button>
+                    <button class="btn-small" onclick="openModal('budget')">📅 الميزانية</button>
+                </div>
+            </div>
+
+            <div class="budget-section animate-in">
+                <div class="section-title">📊 ميزانية هذا الشهر</div>
+                <div class="budget-row">
+                    <input type="number" id="monthly-budget-input" placeholder="أدخل الميزانية الشهرية">
+                    <button class="btn-primary" onclick="setBudget()">حفظ</button>
+                </div>
+                <div class="budget-info">
+                    <span>الميزانية: <b id="budget-display">0</b> د.إ</span>
+                    <span>المتبقي: <b id="remaining-display" style="color: var(--primary)">0</b> د.إ</span>
+                </div>
+            </div>
+
+            <div class="quick-add animate-in">
+                <div class="section-title">⚡ إضافة مصروف سريع</div>
+                <input type="number" class="amount-input" id="quick-amount" placeholder="0.00">
+                <div class="categories-grid" id="categories-grid"></div>
+                <button class="btn-add" onclick="addExpense()">
+                    <span>➖</span> خصم من الرصيد
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div id="stats-section" class="section">
+            <div class="header">
+                <h1>📊 الإحصائيات</h1>
+                <p>تحليل مصروفاتك</p>
+            </div>
+            <div class="stats-section animate-in">
+                <div class="section-title">توزيع المصروفات</div>
+                <div class="chart-container">
+                    <div class="donut-chart" id="donut-chart"></div>
+                    <div class="chart-legend" id="chart-legend"></div>
+                </div>
+            </div>
+            <div class="stats-section animate-in">
+                <div class="section-title">📈 ملخص الشهر</div>
+                <div class="budget-info" style="font-size: 0.9rem; margin-bottom: 8px;">
+                    <span>إجمالي الدخل: <b id="total-income" style="color: var(--primary)">0</b></span>
+                    <span>إجمالي المصروفات: <b id="total-expense" style="color: var(--danger)">0</b></span>
+                </div>
+                <div class="budget-info" style="font-size: 0.9rem;">
+                    <span>عدد العمليات: <b id="tx-count">0</b></span>
+                    <span>متوسط المصروف: <b id="avg-expense">0</b></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="section">
+            <div class="header">
+                <h1>📋 السجل</h1>
+                <p>جميع عملياتك المالية</p>
+            </div>
+            <div class="transactions animate-in" id="transactions-list"></div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section">
+            <div class="header">
+                <h1>⚙️ الإعدادات</h1>
+                <p>تخصيص التطبيق</p>
+            </div>
+
+            <div class="budget-section animate-in">
+                <div class="section-title">🎨 المظهر</div>
+                <div class="settings-item">
+                    <div class="theme-toggle-row">
+                        <span class="theme-icon" id="theme-icon">🌙</span>
+                        <div>
+                            <div class="settings-label">الوضع الليلي</div>
+                            <div class="settings-desc">تفعيل/إيقاف الوضع الداكن</div>
+                        </div>
+                    </div>
+                    <div class="toggle active" id="theme-toggle" onclick="toggleTheme()"></div>
+                </div>
+            </div>
+
+            <div class="budget-section animate-in">
+                <div class="section-title">🔔 التنبيهات والإشعارات</div>
+
+                <div class="notif-item">
+                    <div class="notif-item-header">
+                        <div>
+                            <div class="notif-item-title">تنبيه نفاد الميزانية</div>
+                            <div class="notif-item-desc">إشعار عندما يتبقى أقل من نسبة معينة</div>
+                        </div>
+                        <div class="toggle" id="toggle-budget" onclick="toggleNotif('budget')"></div>
+                    </div>
+                    <div class="notif-input-row">
+                        <input type="number" id="budget-threshold" placeholder="النسبة %" value="20" min="1" max="99">
+                        <span style="color: var(--text2); font-size: 0.85rem; align-self: center; font-weight: 600;">%</span>
+                        <button class="btn-notif" onclick="saveBudgetAlert()">حفظ</button>
+                    </div>
+                </div>
+
+                <div class="notif-item">
+                    <div class="notif-item-header">
+                        <div>
+                            <div class="notif-item-title">تنبيه الرصيد المنخفض</div>
+                            <div class="notif-item-desc">إشعار عندما ينخفض الرصيد عن مبلغ محدد</div>
+                        </div>
+                        <div class="toggle" id="toggle-low" onclick="toggleNotif('low')"></div>
+                    </div>
+                    <div class="notif-input-row">
+                        <input type="number" id="low-balance" placeholder="المبلغ" value="100">
+                        <span style="color: var(--text2); font-size: 0.85rem; align-self: center; font-weight: 600;">د.إ</span>
+                        <button class="btn-notif" onclick="saveLowBalanceAlert()">حفظ</button>
+                    </div>
+                </div>
+
+                <div class="notif-item">
+                    <div class="notif-item-header">
+                        <div>
+                            <div class="notif-item-title">تذكير يومي</div>
+                            <div class="notif-item-desc">تذكير بمراجعة مصروفاتك يومياً</div>
+                        </div>
+                        <div class="toggle" id="toggle-daily" onclick="toggleNotif('daily')"></div>
+                    </div>
+                    <div class="notif-input-row">
+                        <select id="daily-hour">
+                            <option value="8">8 صباحاً</option>
+                            <option value="9">9 صباحاً</option>
+                            <option value="12">12 ظهراً</option>
+                            <option value="18">6 مساءً</option>
+                            <option value="20">8 مساءً</option>
+                            <option value="21">9 مساءً</option>
+                            <option value="22">10 مساءً</option>
+                        </select>
+                        <button class="btn-notif" onclick="saveDailyReminder()">حفظ</button>
+                    </div>
+                </div>
+
+                <div class="notif-item">
+                    <div class="notif-item-header">
+                        <div>
+                            <div class="notif-item-title">تنبيه المصروف الكبير</div>
+                            <div class="notif-item-desc">إشعار عند إضافة مصروف يتجاوز مبلغ معين</div>
+                        </div>
+                        <div class="toggle" id="toggle-large" onclick="toggleNotif('large')"></div>
+                    </div>
+                    <div class="notif-input-row">
+                        <input type="number" id="large-expense" placeholder="المبلغ" value="500">
+                        <span style="color: var(--text2); font-size: 0.85rem; align-self: center; font-weight: 600;">د.إ</span>
+                        <button class="btn-notif" onclick="saveLargeExpenseAlert()">حفظ</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; padding: 14px; background: var(--bg); border-radius: 12px; font-size: 0.85rem; color: var(--text2); text-align: center; line-height: 1.8; font-weight: 500;">
+                    💡 <b>ملاحظة:</b> التنبيهات تعمل حتى بدون إنترنت!<br>
+                    سيتم فحصها تلقائياً عند كل عملية.
+                </div>
+            </div>
+
+            <div class="budget-section animate-in">
+                <div class="section-title">💾 البيانات</div>
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">تصدير البيانات</div>
+                        <div class="settings-desc">حفظ نسخة احتياطية</div>
+                    </div>
+                    <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 700;" onclick="exportData()">تصدير</button>
+                </div>
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">استيراد البيانات</div>
+                        <div class="settings-desc">استعادة من نسخة احتياطية</div>
+                    </div>
+                    <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 700;" onclick="document.getElementById('import-file').click()">استيراد</button>
+                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(this)">
+                </div>
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">مسح جميع البيانات</div>
+                        <div class="settings-desc">حذف كل شيء بشكل نهائي</div>
+                    </div>
+                    <button class="btn-add" style="width: auto; padding: 8px 16px; font-size: 0.85rem; font-weight: 700;" onclick="clearAll()">مسح</button>
+                </div>
+            </div>
+
+            <div class="budget-section animate-in">
+                <div class="section-title">ℹ️ عن التطبيق</div>
+                <div style="text-align: center; padding: 20px; color: var(--text2);">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">💰</div>
+                    <div style="font-weight: 800; color: var(--text); margin-bottom: 4px; font-size: 1.1rem;">محفظتي</div>
+                    <div style="font-size: 0.85rem; font-weight: 500;">إصدار 3.0 - مع نظام التنبيهات الذكي</div>
+                    <div style="font-size: 0.8rem; margin-top: 8px; font-weight: 400;">لا يتطلب إنترنت • البيانات محلية 100%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="showSection('home')">
+            <span class="nav-icon">🏠</span>
+            <span>الرئيسية</span>
+        </button>
+        <button class="nav-item" onclick="showSection('stats')">
+            <span class="nav-icon">📊</span>
+            <span>إحصائيات</span>
+        </button>
+        <button class="nav-item" onclick="showSection('history')">
+            <span class="nav-icon">📋</span>
+            <span>السجل</span>
+        </button>
+        <button class="nav-item" onclick="showSection('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span>إعدادات</span>
+        </button>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-title" id="modal-title">عنوان</div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+<script>
+const CURRENCY = 'د.إ';
+const CURRENCY_NAME = 'درهم إماراتي';
+
+const categories = [
+    { id: 'food', name: 'طعام', icon: '🍔', color: '#ef4444' },
+    { id: 'transport', name: 'مواصلات', icon: '🚗', color: '#3b82f6' },
+    { id: 'shopping', name: 'تسوق', icon: '🛍️', color: '#8b5cf6' },
+    { id: 'bills', name: 'فواتير', icon: '💡', color: '#f59e0b' },
+    { id: 'entertainment', name: 'ترفيه', icon: '🎮', color: '#ec4899' },
+    { id: 'health', name: 'صحة', icon: '💊', color: '#10b981' },
+    { id: 'education', name: 'تعليم', icon: '📚', color: '#06b6d4' },
+    { id: 'other', name: 'أخرى', icon: '📌', color: '#64748b' }
+];
+
+const defaultNotifs = {
+    budget: { enabled: false, threshold: 20 },
+    low: { enabled: false, amount: 100 },
+    daily: { enabled: false, hour: 20 },
+    large: { enabled: false, amount: 500 }
+};
+
+let state = {
+    balance: 0,
+    monthlyBudget: 0,
+    transactions: [],
+    selectedCategory: 'food',
+    notifications: { ...defaultNotifs },
+    dismissedAlerts: [],
+    lastDailyReminder: null,
+    darkMode: true
+};
+
+function loadData() {
+    const saved = localStorage.getItem('wallet_data_v3');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        state = { ...state, ...parsed };
+        if (!state.notifications) state.notifications = { ...defaultNotifs };
+        if (!state.dismissedAlerts) state.dismissedAlerts = [];
+        if (state.darkMode === undefined) state.darkMode = true;
+        checkMonthlyBudget();
+    }
+    applyTheme();
+    updateUI();
+    initNotifications();
+}
+
+function saveData() {
+    localStorage.setItem('wallet_data_v3', JSON.stringify(state));
+}
+
+function checkMonthlyBudget() {
+    const now = new Date();
+    const currentMonth = now.getFullYear() + '-' + (now.getMonth() + 1);
+    const lastBudgetMonth = localStorage.getItem('last_budget_month_v3');
+
+    if (lastBudgetMonth !== currentMonth && state.monthlyBudget > 0) {
+        state.balance += state.monthlyBudget;
+        state.transactions.unshift({
+            id: Date.now(),
+            type: 'income',
+            amount: state.monthlyBudget,
+            category: 'monthly',
+            date: now.toISOString(),
+            note: 'الميزانية الشهرية'
+        });
+        localStorage.setItem('last_budget_month_v3', currentMonth);
+        showToast('✅ تم إضافة الميزانية الشهرية: ' + state.monthlyBudget + ' ' + CURRENCY);
+        saveData();
+    }
+}
+
+// ==================== THEME SYSTEM ====================
+
+function applyTheme() {
+    if (state.darkMode) {
+        document.body.classList.remove('light-mode');
+        document.getElementById('theme-icon').textContent = '🌙';
+        document.getElementById('theme-toggle').classList.add('active');
+        document.querySelector('meta[name="theme-color"]').content = '#0f172a';
+    } else {
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-toggle').classList.remove('active');
+        document.querySelector('meta[name="theme-color"]').content = '#f8fafc';
+    }
+}
+
+function toggleTheme() {
+    state.darkMode = !state.darkMode;
+    applyTheme();
+    saveData();
+    showToast(state.darkMode ? '🌙 تم تفعيل الوضع الليلي' : '☀️ تم تفعيل الوضع الفاتح');
+}
+
+// ==================== NOTIFICATION SYSTEM ====================
+
+function initNotifications() {
+    updateToggleUI();
+    checkDailyReminder();
+    setInterval(() => { checkDailyReminder(); }, 60000);
+}
+
+function updateToggleUI() {
+    const notifs = state.notifications;
+    document.getElementById('toggle-budget').classList.toggle('active', notifs.budget.enabled);
+    document.getElementById('toggle-low').classList.toggle('active', notifs.low.enabled);
+    document.getElementById('toggle-daily').classList.toggle('active', notifs.daily.enabled);
+    document.getElementById('toggle-large').classList.toggle('active', notifs.large.enabled);
+
+    if (notifs.budget.threshold) document.getElementById('budget-threshold').value = notifs.budget.threshold;
+    if (notifs.low.amount) document.getElementById('low-balance').value = notifs.low.amount;
+    if (notifs.daily.hour) document.getElementById('daily-hour').value = notifs.daily.hour;
+    if (notifs.large.amount) document.getElementById('large-expense').value = notifs.large.amount;
+}
+
+function toggleNotif(type) {
+    state.notifications[type].enabled = !state.notifications[type].enabled;
+    updateToggleUI();
+    saveData();
+    const names = { budget: 'تنبيه نفاد الميزانية', low: 'تنبيه الرصيد المنخفض', daily: 'التذكير اليومي', large: 'تنبيه المصروف الكبير' };
+    showToast(state.notifications[type].enabled ? `🔔 تم تفعيل: ${names[type]}` : `🔕 تم إيقاف: ${names[type]}`);
+}
+
+function saveBudgetAlert() {
+    const val = parseInt(document.getElementById('budget-threshold').value);
+    if (!val || val < 1 || val > 99) { showToast('❌ أدخل نسبة بين 1 و 99'); return; }
+    state.notifications.budget.threshold = val;
+    saveData();
+    showToast(`✅ سيتم التنبيه عندما يتبقى أقل من ${val}% من الميزانية`);
+}
+
+function saveLowBalanceAlert() {
+    const val = parseFloat(document.getElementById('low-balance').value);
+    if (!val || val <= 0) { showToast('❌ أدخل مبلغ صحيح'); return; }
+    state.notifications.low.amount = val;
+    saveData();
+    showToast(`✅ سيتم التنبيه عندما ينخفض الرصيد عن ${val} ${CURRENCY}`);
+}
+
+function saveDailyReminder() {
+    const hour = parseInt(document.getElementById('daily-hour').value);
+    state.notifications.daily.hour = hour;
+    saveData();
+    showToast(`✅ تم حفظ التذكير اليومي الساعة ${hour}:00`);
+}
+
+function saveLargeExpenseAlert() {
+    const val = parseFloat(document.getElementById('large-expense').value);
+    if (!val || val <= 0) { showToast('❌ أدخل مبلغ صحيح'); return; }
+    state.notifications.large.amount = val;
+    saveData();
+    showToast(`✅ سيتم التنبيه عند مصروف يتجاوز ${val} ${CURRENCY}`);
+}
+
+function checkAlerts() {
+    const notifs = state.notifications;
+    const spent = state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const remaining = state.monthlyBudget - spent;
+    const remainingPct = state.monthlyBudget > 0 ? (remaining / state.monthlyBudget * 100) : 0;
+
+    if (notifs.budget.enabled && remainingPct <= notifs.budget.threshold && remainingPct > 0) {
+        if (!state.dismissedAlerts.includes('budget')) {
+            showAlert(`⚠️ تنبيه: تبقى فقط ${remainingPct.toFixed(0)}% من ميزانيتك الشهرية! (${remaining.toLocaleString('ar-SA')} ${CURRENCY})`);
+        }
+    }
+    if (notifs.low.enabled && state.balance <= notifs.low.amount && state.balance > 0) {
+        if (!state.dismissedAlerts.includes('low')) {
+            showAlert(`⚠️ تنبيه: رصيدك منخفض! (${state.balance.toLocaleString('ar-SA')} ${CURRENCY})`);
+        }
+    }
+}
+
+function checkDailyReminder() {
+    const notifs = state.notifications;
+    if (!notifs.daily.enabled) return;
+    const now = new Date();
+    const today = now.toDateString();
+    const currentHour = now.getHours();
+    if (state.lastDailyReminder === today) return;
+    if (currentHour !== notifs.daily.hour) return;
+    const spent = state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    showToast(`📅 تذكير يومي: لقد أنفقت اليوم ${spent.toLocaleString('ar-SA')} ${CURRENCY}`, 4000);
+    state.lastDailyReminder = today;
+    saveData();
+}
+
+function showAlert(text) {
+    const banner = document.getElementById('alert-banner');
+    document.getElementById('alert-text').textContent = text;
+    banner.classList.add('show');
+    setTimeout(() => { banner.classList.remove('show'); }, 10000);
+}
+
+function dismissAlert() {
+    const banner = document.getElementById('alert-banner');
+    banner.classList.remove('show');
+    const text = document.getElementById('alert-text').textContent;
+    if (text.includes('ميزانيتك')) state.dismissedAlerts.push('budget');
+    if (text.includes('منخفض')) state.dismissedAlerts.push('low');
+    saveData();
+}
+
+// ==================== CORE FUNCTIONS ====================
+
+function updateUI() {
+    document.getElementById('balance').textContent = state.balance.toLocaleString('ar-SA');
+    document.getElementById('budget-display').textContent = state.monthlyBudget.toLocaleString('ar-SA');
+
+    const spent = state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const remaining = state.monthlyBudget - spent;
+    document.getElementById('remaining-display').textContent = remaining.toLocaleString('ar-SA');
+    document.getElementById('remaining-display').style.color = remaining < 0 ? 'var(--danger)' : 'var(--primary)';
+
+    renderCategories();
+    renderTransactions();
+    renderStats();
+    checkAlerts();
+}
+
+function renderCategories() {
+    const grid = document.getElementById('categories-grid');
+    grid.innerHTML = categories.map(cat => `
+        <div class="cat-btn ${state.selectedCategory === cat.id ? 'selected' : ''}" 
+             onclick="selectCategory('${cat.id}')">
+            <span class="cat-icon">${cat.icon}</span>
+            <span class="cat-name">${cat.name}</span>
+        </div>
+    `).join('');
+}
+
+function selectCategory(id) {
+    state.selectedCategory = id;
+    renderCategories();
+}
+
+function addExpense() {
+    const amount = parseFloat(document.getElementById('quick-amount').value);
+    if (!amount || amount <= 0) { showToast('❌ أدخل مبلغ صحيح'); return; }
+    if (amount > state.balance) { showToast('⚠️ الرصيد غير كافٍ'); return; }
+
+    const cat = categories.find(c => c.id === state.selectedCategory);
+    state.balance -= amount;
+    state.transactions.unshift({
+        id: Date.now(), type: 'expense', amount: amount,
+        category: cat.id, categoryName: cat.name, categoryIcon: cat.icon,
+        date: new Date().toISOString(), note: ''
+    });
+
+    if (state.notifications.large.enabled && amount >= state.notifications.large.amount) {
+        showToast(`🚨 مصروف كبير! لقد أنفقت ${amount.toLocaleString('ar-SA')} ${CURRENCY}`, 4000);
+    }
+    state.dismissedAlerts = [];
+    document.getElementById('quick-amount').value = '';
+    saveData();
+    updateUI();
+    showToast(`✅ تم خصم ${amount} ${CURRENCY} من ${cat.name}`);
+}
+
+function setBudget() {
+    const amount = parseFloat(document.getElementById('monthly-budget-input').value);
+    if (!amount || amount <= 0) { showToast('❌ أدخل ميزانية صحيحة'); return; }
+    state.monthlyBudget = amount;
+    saveData();
+    updateUI();
+    showToast('✅ تم حفظ الميزانية الشهرية');
+    document.getElementById('monthly-budget-input').value = '';
+}
+
+function renderTransactions() {
+    const list = document.getElementById('transactions-list');
+    if (state.transactions.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="emoji">📭</div>
+                <div>لا توجد عمليات بعد</div>
+                <div style="font-size: 0.85rem; margin-top: 8px; font-weight: 400;">ابدأ بإضافة مصروفك الأول!</div>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = state.transactions.map(tx => {
+        const date = new Date(tx.date);
+        const dateStr = date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const isIncome = tx.type === 'income';
+        const cat = categories.find(c => c.id === tx.category);
+        const icon = isIncome ? '💰' : (cat ? cat.icon : '📌');
+        const bg = isIncome ? 'rgba(16,185,129,0.2)' : (cat ? cat.color + '33' : 'rgba(100,116,139,0.2)');
+
+        return `
+            <div class="tx-item">
+                <div class="tx-icon" style="background: ${bg}">${icon}</div>
+                <div class="tx-details">
+                    <div class="tx-title">${tx.note || (cat ? cat.name : 'عملية')}</div>
+                    <div class="tx-date">${dateStr}</div>
+                </div>
+                <div class="tx-amount ${isIncome ? 'income' : ''}">${isIncome ? '+' : '-'}${tx.amount.toLocaleString('ar-SA')}</div>
+                <button class="delete-btn" onclick="deleteTx(${tx.id})">🗑️</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function deleteTx(id) {
+    const tx = state.transactions.find(t => t.id === id);
+    if (!tx) return;
+    if (tx.type === 'expense') state.balance += tx.amount;
+    else state.balance -= tx.amount;
+    state.transactions = state.transactions.filter(t => t.id !== id);
+    saveData();
+    updateUI();
+    showToast('🗑️ تم حذف العملية');
+}
+
+function renderStats() {
+    const expenses = state.transactions.filter(t => t.type === 'expense');
+    const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+
+    document.getElementById('total-income').textContent = totalIncome.toLocaleString('ar-SA');
+    document.getElementById('total-expense').textContent = totalExpense.toLocaleString('ar-SA');
+    document.getElementById('tx-count').textContent = expenses.length;
+    document.getElementById('avg-expense').textContent = expenses.length > 0 ? Math.round(totalExpense / expenses.length).toLocaleString('ar-SA') : '0';
+
+    const catTotals = {};
+    expenses.forEach(tx => { catTotals[tx.category] = (catTotals[tx.category] || 0) + tx.amount; });
+
+    const legend = document.getElementById('chart-legend');
+    if (Object.keys(catTotals).length === 0) {
+        legend.innerHTML = '<div style="color: var(--text2); font-size: 0.9rem; font-weight: 500;">لا توجد مصروفات بعد</div>';
+        document.getElementById('donut-chart').style.background = 'conic-gradient(var(--card2) 0% 100%)';
+        return;
+    }
+
+    let gradient = ''; let currentDeg = 0;
+    const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+    legend.innerHTML = sortedCats.map(([catId, amount]) => {
+        const cat = categories.find(c => c.id === catId);
+        const pct = (amount / totalExpense * 100).toFixed(1);
+        const deg = (amount / totalExpense * 360);
+        const startDeg = currentDeg;
+        currentDeg += deg;
+        gradient += `${cat ? cat.color : '#64748b'} ${startDeg}deg ${currentDeg}deg, `;
+
+        return `
+            <div class="legend-item">
+                <div class="legend-dot" style="background: ${cat ? cat.color : '#64748b'}"></div>
+                <div class="legend-info">
+                    <span style="font-weight: 600;">${cat ? cat.name : 'أخرى'}</span>
+                    <span style="font-weight: 700;">${amount.toLocaleString('ar-SA')} (${pct}%)</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('donut-chart').style.background = `conic-gradient(${gradient.slice(0, -2)})`;
+}
+
+function openModal(type) {
+    const modal = document.getElementById('modal');
+    const title = document.getElementById('modal-title');
+    const content = document.getElementById('modal-content');
+
+    if (type === 'income') {
+        title.textContent = '➕ إضافة دخل';
+        content.innerHTML = `
+            <div class="modal-row">
+                <label>المبلغ (${CURRENCY})</label>
+                <input type="number" id="income-amount" placeholder="0.00" autofocus>
+            </div>
+            <div class="modal-row">
+                <label>الوصف (اختياري)</label>
+                <input type="text" id="income-note" placeholder="مثال: راتب، هدية...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button class="btn-confirm" onclick="addIncome()">إضافة</button>
+            </div>
+        `;
+    } else if (type === 'budget') {
+        title.textContent = '📅 الميزانية الشهرية';
+        content.innerHTML = `
+            <div class="modal-row">
+                <label>الميزانية الشهرية (${CURRENCY})</label>
+                <input type="number" id="modal-budget" placeholder="0.00" value="${state.monthlyBudget || ''}">
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px; font-weight: 500;">
+                سيتم إضافة هذا المبلغ تلقائياً في أول كل شهر
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button class="btn-confirm" onclick="saveModalBudget()">حفظ</button>
+            </div>
+        `;
+    }
+    modal.classList.add('active');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function addIncome() {
+    const amount = parseFloat(document.getElementById('income-amount').value);
+    const note = document.getElementById('income-note').value;
+    if (!amount || amount <= 0) { showToast('❌ أدخل مبلغ صحيح'); return; }
+
+    state.balance += amount;
+    state.transactions.unshift({
+        id: Date.now(), type: 'income', amount: amount,
+        category: 'income', date: new Date().toISOString(), note: note || 'دخل'
+    });
+    saveData(); updateUI(); closeModal();
+    showToast(`✅ تم إضافة ${amount} ${CURRENCY}`);
+}
+
+function saveModalBudget() {
+    const amount = parseFloat(document.getElementById('modal-budget').value);
+    if (!amount || amount <= 0) { showToast('❌ أدخل ميزانية صحيحة'); return; }
+    state.monthlyBudget = amount;
+    saveData(); updateUI(); closeModal();
+    showToast('✅ تم حفظ الميزانية');
+}
+
+function showSection(section) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(section + '-section').classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function showToast(msg, duration = 2500) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+function exportData() {
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wallet_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('💾 تم تصدير البيانات');
+}
+
+function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.balance !== undefined && data.transactions) {
+                state = { ...state, ...data };
+                if (!state.notifications) state.notifications = { ...defaultNotifs };
+                saveData();
+                applyTheme();
+                updateUI();
+                updateToggleUI();
+                showToast('✅ تم استيراد البيانات بنجاح');
+            } else { showToast('❌ ملف غير صالح'); }
+        } catch (err) { showToast('❌ خطأ في قراءة الملف'); }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+function clearAll() {
+    if (!confirm('هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع!')) return;
+    state = { 
+        balance: 0, monthlyBudget: 0, transactions: [], selectedCategory: 'food',
+        notifications: { ...defaultNotifs }, dismissedAlerts: [],
+        lastDailyReminder: null, darkMode: state.darkMode
+    };
+    localStorage.removeItem('wallet_data_v3');
+    localStorage.removeItem('last_budget_month_v3');
+    updateUI();
+    updateToggleUI();
+    showToast('🗑️ تم مسح جميع البيانات');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('quick-amount').addEventListener('keypress', function(e) { if (e.key === 'Enter') addExpense(); });
+
+loadData();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "محفظتي - إدارة المال",
+  "short_name": "محفظتي",
+  "description": "تطبيق لإدارة المصروفات والميزانية الشخصية",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
